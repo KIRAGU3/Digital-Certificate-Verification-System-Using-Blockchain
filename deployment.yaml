@@ -1,0 +1,33 @@
+# Deployment Configuration
+
+# Frontend Build & Deployment
+frontend:
+  build:
+    env: production
+    command: npm run build
+  deploy:
+    provider: netlify
+    site_id: your-site-id
+    dir: build/
+
+# Backend Deployment
+backend:
+  wsgi: certificate_backend.wsgi:application
+  requirements: requirements.txt
+  python_version: 3.11
+  env_files:
+    - .env.production
+  allowed_hosts:
+    - api.yourcertificateapp.com
+  static_files:
+    url: /static/
+    dir: staticfiles/
+
+# Blockchain Deployment
+blockchain:
+  network: mainnet
+  verify_contract: true
+  optimizer: true
+  optimizer_runs: 200
+  env_files:
+    - .env.production

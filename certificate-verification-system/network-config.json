@@ -1,0 +1,19 @@
+{
+    "development": {
+        "networkId": "1337",
+        "host": "127.0.0.1",
+        "port": 8545,
+        "network_type": "ganache"
+    },
+    "testing": {
+        "networkId": "1337",
+        "host": "127.0.0.1",
+        "port": 8545,
+        "network_type": "ganache"
+    },
+    "production": {
+        "networkId": "1",
+        "infuraProjectId": "your-infura-project-id",
+        "network_type": "mainnet"
+    }
+}
