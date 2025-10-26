@@ -1,5 +1,5 @@
 # certificates/urls.py
-from django.urls import path
+from django.urls import path, include
 from certificates import views
 from .views import IssueCertificateView
 
@@ -10,4 +10,5 @@ urlpatterns = [
     path('verify-blockchain/<str:cert_hash>/', views.verify_blockchain_view, name='verify_blockchain'),
     path('revoke/<str:cert_hash>/', views.revoke_certificate_view, name='revoke_certificate'),
     path('admin/login/', views.admin_login, name='admin_login'),
+    path('rewards/', include('certificates.rewards_urls')),
 ]

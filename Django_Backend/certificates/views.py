@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from datetime import datetime
 from django.utils import timezone
+from .rewards_service import RewardService
 
 @api_view(['GET'])
 def verify_blockchain_view(request, cert_hash):
@@ -222,17 +223,42 @@ class IssueCertificateView(APIView):
                 course=course,
                 institution=institution,
                 issue_date=issue_date_dt,
-                cert_hash=cert_hash,  # Use certificate hash, not transaction hash
+                cert_hash=cert_hash,
                 certificate_pdf=certificate_pdf,
                 ipfs_hash=tx_result.get('ipfs_hash', '')
             )
 
-            return Response({
+            reward_info = None
+            try:
+                issuer_wallet = request.data.get('walletAddress') or request.data.get('wallet_address')
+                if issuer_wallet:
+                    reward_service = RewardService()
+                    institution_reward = reward_service.record_certificate_issuance(
+                        issuer_wallet,
+                        institution,
+                        cert_hash
+                    )
+                    reward_info = {
+                        'total_certificates': institution_reward.total_certificates_issued,
+                        'reward_points': institution_reward.reward_points,
+                        'current_tier': institution_reward.current_tier,
+                        'next_milestone': institution_reward.get_next_milestone(),
+                        'milestone_progress': institution_reward.get_milestone_progress()
+                    }
+            except Exception as reward_error:
+                print(f"Reward tracking error: {str(reward_error)}")
+
+            response_data = {
                 'cert_hash': cert_hash,
                 'transaction_hash': tx_hash,
                 'certificate': CertificateSerializer(certificate).data,
                 'message': 'Certificate issued successfully'
-            }, status=status.HTTP_201_CREATED)
+            }
+
+            if reward_info:
+                response_data['rewards'] = reward_info
+
+            return Response(response_data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             print(f"Error in certificate issuance: {str(e)}")
