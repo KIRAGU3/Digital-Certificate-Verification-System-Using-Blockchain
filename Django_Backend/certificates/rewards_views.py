@@ -167,3 +167,48 @@ def check_milestone_eligibility(request):
             {'error': 'Institution not found'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+@api_view(['POST'])
+def register_wallet(request):
+    wallet_address = request.data.get('wallet_address')
+    institution_name = request.data.get('institution_name')
+
+    if not wallet_address:
+        return Response(
+            {'error': 'Wallet address required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    wallet_address = wallet_address.lower()
+
+    try:
+        institution = InstitutionReward.objects.get(wallet_address=wallet_address)
+        return Response({
+            'success': True,
+            'message': 'Wallet already registered',
+            'institution': {
+                'wallet_address': institution.wallet_address,
+                'institution_name': institution.institution_name,
+                'total_certificates': institution.total_certificates_issued,
+                'reward_points': institution.reward_points,
+                'current_tier': institution.current_tier
+            }
+        })
+    except InstitutionReward.DoesNotExist:
+        institution = InstitutionReward.objects.create(
+            wallet_address=wallet_address,
+            institution_name=institution_name or f'Institution {wallet_address[:8]}'
+        )
+
+        return Response({
+            'success': True,
+            'message': 'Wallet registered successfully',
+            'institution': {
+                'wallet_address': institution.wallet_address,
+                'institution_name': institution.institution_name,
+                'total_certificates': institution.total_certificates_issued,
+                'reward_points': institution.reward_points,
+                'current_tier': institution.current_tier
+            }
+        }, status=status.HTTP_201_CREATED)
