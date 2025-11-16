@@ -76,6 +76,7 @@ button:hover {
   color: #27ae60;
   text-align: center;
   margin-bottom: 20px;
+  font-size: 1.5em;
 }
 
 .certificate-details {
@@ -100,6 +101,42 @@ button:hover {
 
 .detail-value {
   color: #2c3e50;
+  font-weight: 500;
+}
+
+/* QR Code Container */
+.qr-code-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  background-color: #f0f8ff !important;
+  border: 2px solid #4a90e2 !important;
+  padding: 20px !important;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.qr-code-container .detail-label {
+  grid-column: 1;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.qr-code-image {
+  width: 200px;
+  height: 200px;
+  margin: 10px auto;
+  border: 3px solid #4a90e2;
+  border-radius: 6px;
+  padding: 8px;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(74, 144, 226, 0.2);
+}
+
+.qr-code-info {
+  color: #1e40af;
+  font-size: 0.9em;
+  margin: 10px 0 0 0;
   font-weight: 500;
 }
 
@@ -204,6 +241,12 @@ button:hover {
   color: #2d3748;
 }
 
+.verification-instructions .important-note {
+  color: #c41c3b;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
 .verify-link {
   display: inline-block;
   margin-top: 15px;
@@ -221,4 +264,165 @@ button:hover {
   background-color: #2980b9;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* QR Code Section */
+.qr-code-section {
+  grid-column: 1 / -1 !important;
+}
+
+.qr-code-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.qr-code-image {
+  width: 250px;
+  height: 250px;
+  border: 3px solid #4a90e2;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+  object-fit: contain;
+}
+
+.qr-code-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+/* Hash Container */
+.hash-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.hash-value {
+  flex: 1;
+  min-width: 200px;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+  font-size: 0.95em;
+  background-color: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+/* Action Buttons */
+.action-button {
+  padding: 8px 16px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  min-width: 130px;
+  display: inline-block;
+  width: auto;
+}
+
+.action-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
+.copy-btn {
+  background-color: #27ae60;
+}
+
+.copy-btn:hover {
+  background-color: #229954;
+  box-shadow: 0 2px 6px rgba(39, 174, 96, 0.3);
+}
+
+.download-btn {
+  background-color: #e74c3c;
+}
+
+.download-btn:hover {
+  background-color: #c0392b;
+  box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+}
+
+/* QR Code Error */
+.qr-code-error {
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  color: #856404;
+  font-weight: 500;
+  margin: 10px 0;
+}
+
+/* Improved QR Code Container */
+.qr-code-container {
+  background-color: #f0f8ff !important;
+  border: 2px solid #4a90e2 !important;
+  padding: 20px !important;
+  border-radius: 8px;
+  grid-column: 1 / -1 !important;
+  display: grid;
+  gap: 15px;
+}
+
+.qr-code-container .detail-label {
+  color: #1e40af;
+  font-weight: 600;
+  grid-column: 1 / -1;
+}
+
+.certificate-hash,
+.transaction-hash {
+  grid-column: 1 / -1 !important;
+}
+
+.detail-item.qr-code-section {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.detail-item.certificate-hash {
+  position: relative;
+  padding-top: 25px;
+}
+
+.certificate-hash::before {
+  content: "🔐 VERIFICATION HASH";
+  position: absolute;
+  top: -15px;
+  left: 20px;
+  background-color: #2e7d32;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: bold;
+  letter-spacing: 0.5px;
 }

@@ -1,0 +1,150 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   📋 FRESH START CHECKLIST                                 ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+Follow these steps in order to start the system fresh:
+
+┌─ CHECKLIST ───────────────────────────────────────────────────────────────┐
+
+□ Step 1: Start Ganache
+  ├─ Open PowerShell
+  ├─ Run: ganache-cli -p 8545 -d
+  └─ ✅ Verify: "Listening on 127.0.0.1:8545"
+
+□ Step 2: Deploy Smart Contract
+  ├─ Open NEW PowerShell in: certificate-verification-system\certificate-verification-system
+  ├─ Run: truffle migrate --reset
+  ├─ ✅ Verify: Contract deployed successfully
+  └─ Note the contract address displayed
+
+□ Step 3: Start Django Backend
+  ├─ Open NEW PowerShell in: certificate-verification-system\Django_Backend
+  ├─ Run: python manage.py runserver
+  └─ ✅ Verify: "Starting development server at http://127.0.0.1:8000/"
+
+□ Step 4: Start React Frontend
+  ├─ Open NEW PowerShell in: certificate-verification-system\certificate-verification-frontend
+  ├─ Run: npm start
+  └─ ✅ Verify: Browser opens to http://localhost:3000
+
+□ Step 5: Test Certificate Issuance
+  ├─ Go to http://localhost:3000/issue
+  ├─ Fill form:
+  │  ├─ Student Name: Test Student
+  │  ├─ Course: Test Course
+  │  ├─ Institution: Test University
+  │  ├─ Date: Today
+  │  └─ PDF: Any PDF file
+  ├─ Click "Issue Certificate"
+  └─ ✅ Verify: Certificate issued with QR code
+
+□ Step 6: Test Certificate Verification
+  ├─ Go to http://localhost:3000/verify
+  ├─ Paste the certificate hash
+  ├─ Click "Verify"
+  └─ ✅ Verify: Shows "Certificate is Valid" ✅
+
+□ Step 7: Test QR Upload
+  ├─ Go to http://localhost:3000/verify
+  ├─ Click "Upload QR Image"
+  ├─ Upload the QR code from Step 5
+  └─ ✅ Verify: Shows certificate data with ✅ VALID
+
+□ Step 8: Check Django Logs
+  ├─ Look at Django terminal (Step 3)
+  ├─ Should show:
+  │  ├─ "Certificate found on blockchain"
+  │  ├─ "overall_valid: True"
+  │  └─ Response: 200 OK
+  └─ ✅ Verify: No errors in logs
+
+└───────────────────────────────────────────────────────────────────────────┘
+
+QUICK REFERENCE:
+
+Terminal 1 - GANACHE:
+  ganache-cli -p 8545 -d
+  [Keep running] ← MUST BE RUNNING
+
+Terminal 2 - TRUFFLE:
+  truffle migrate --reset
+  [Run once, then close]
+
+Terminal 3 - DJANGO:
+  cd Django_Backend
+  python manage.py runserver
+  [Keep running] ← MUST BE RUNNING
+
+Terminal 4 - REACT:
+  cd certificate-verification-frontend
+  npm start
+  [Keep running] ← MUST BE RUNNING
+
+BROWSER:
+  http://localhost:3000 ← Frontend
+  http://127.0.0.1:8000 ← Backend API
+
+═══════════════════════════════════════════════════════════════════════════════
+
+WHAT IF SOMETHING GOES WRONG?
+
+Issue: Port already in use
+└─ Kill process: netstat -ano | findstr :8545 (or :3000, :8000)
+   taskkill /PID <PID> /F
+
+Issue: Ganache not starting
+└─ Make sure Ganache is installed: npm install -g ganache-cli
+   Or use Ganache GUI
+
+Issue: Contract deployment fails
+└─ Check Ganache is running first
+   Run: ganache-cli -p 8545 -d
+   Then: truffle migrate --reset
+
+Issue: Django can't connect to blockchain
+└─ Check Django logs for connection errors
+   Make sure Ganache is running
+   Make sure contract is deployed
+
+Issue: Certificate verification fails
+└─ Check Django logs for errors
+└─ Verify certificate was just issued
+└─ Try refreshing browser (Ctrl+R)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+EXPECTED RESULTS:
+
+✅ Certificate Issuance:
+   - Takes 2-3 seconds
+   - Shows success message
+   - QR code displayed
+   - Hash shown
+
+✅ Certificate Verification (by hash):
+   - Shows certificate details
+   - Green checkmark
+   - "Certificate is Valid"
+
+✅ QR Upload:
+   - Instantly recognizes QR
+   - Shows certificate data
+   - Green checkmark
+   - "Certificate is Valid"
+
+✅ Django Logs:
+   - Shows "Certificate found on blockchain"
+   - Shows "overall_valid: True"
+   - Response status 200
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PORTS CHECKLIST:
+
+✅ Ganache: 127.0.0.1:8545 (blockchain)
+✅ Django: 127.0.0.1:8000 (API)
+✅ React:  localhost:3000 (Frontend)
+
+All three must be running for the system to work!
+
+═══════════════════════════════════════════════════════════════════════════════

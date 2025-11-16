@@ -8,6 +8,7 @@ urlpatterns = [
     path('issue/', IssueCertificateView.as_view(), name='issue_certificate'),
     path('verify/<str:cert_hash>/', views.verify_certificate_view, name='verify_certificate'),
     path('verify-blockchain/<str:cert_hash>/', views.verify_blockchain_view, name='verify_blockchain'),
+    path('verify-qr/', views.verify_by_qr_code, name='verify_qr'),
     path('revoke/<str:cert_hash>/', views.revoke_certificate_view, name='revoke_certificate'),
     path('admin/login/', views.admin_login, name='admin_login'),
 ]

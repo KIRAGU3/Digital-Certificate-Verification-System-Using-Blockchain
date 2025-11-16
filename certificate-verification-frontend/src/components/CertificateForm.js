@@ -36,9 +36,9 @@ const CertificateForm = () => {
     data.append('institution', formData.institution);
 
     // Send both formatted date and timestamp
-    const dateObj = new Date(formData.issueDate);
-    const formattedDate = dateObj.toISOString().split('T')[0];
-    const timestamp = Math.floor(dateObj.getTime() / 1000);
+    const dateObj = new Date(formData.issueDate + 'T00:00:00Z');  // Parse as UTC midnight
+    const formattedDate = formData.issueDate;  // Use the date string directly
+    const timestamp = Math.floor(dateObj.getTime() / 1000);  // Convert to seconds
     data.append('issueDate', formattedDate);
     data.append('issueDateTimestamp', timestamp);
 
@@ -50,6 +50,7 @@ const CertificateForm = () => {
       setIssuedCertificate({
         certHash: response.cert_hash,
         txHash: response.transaction_hash,
+        qrCodeUrl: response.qr_code_url,
         warning: response.warning,
         studentName: formData.studentName,
         course: formData.course,
@@ -145,7 +146,7 @@ const CertificateForm = () => {
 
       {issuedCertificate && (
         <div className="certificate-success">
-          <h3>Certificate Issued Successfully!</h3>
+          <h3>✅ Certificate Issued Successfully!</h3>
           <div className="certificate-details">
             <div className="detail-item">
               <span className="detail-label">Student Name:</span>
@@ -163,23 +164,113 @@ const CertificateForm = () => {
               <span className="detail-label">Issue Date:</span>
               <span className="detail-value">{issuedCertificate.issueDate}</span>
             </div>
+
+            {/* QR Code Section */}
+            <div className="detail-item qr-code-section">
+              <span className="detail-label">📱 QR Code (Scan for Verification):</span>
+              {issuedCertificate.qrCodeUrl ? (
+                <div className="qr-code-container">
+                  <div className="qr-code-display">
+                    <img
+                      src={issuedCertificate.qrCodeUrl}
+                      alt="Certificate QR Code"
+                      className="qr-code-image"
+                      onError={(e) => {
+                        console.error("QR code failed to load:", issuedCertificate.qrCodeUrl);
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <div className="qr-code-actions">
+                    <button
+                      className="action-button download-btn"
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = issuedCertificate.qrCodeUrl;
+                        link.download = `certificate-qr-${issuedCertificate.certHash.substring(0, 8)}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                    >
+                      📥 Download QR Code
+                    </button>
+                  </div>
+                  <p className="qr-code-info">
+                    📱 Scan this QR code with your phone camera to verify the certificate instantly!
+                  </p>
+                </div>
+              ) : (
+                <div className="qr-code-error">
+                  ⚠️ QR code is being generated. Please refresh the page in a moment.
+                </div>
+              )}
+            </div>
+
+            {/* Certificate Hash Section */}
             <div className="detail-item certificate-hash">
-              <span className="detail-label">Certificate Hash (Use this for verification):</span>
-              <span className="detail-value">{issuedCertificate.certHash}</span>
+              <span className="detail-label">🔐 Certificate Hash (Use this for verification):</span>
+              <div className="hash-container">
+                <span className="detail-value hash-value">{issuedCertificate.certHash}</span>
+                <button
+                  className="action-button copy-btn"
+                  onClick={() => {
+                    navigator.clipboard.writeText(issuedCertificate.certHash);
+                    alert('✅ Certificate hash copied to clipboard!');
+                  }}
+                  title="Copy to clipboard"
+                >
+                  📋 Copy Hash
+                </button>
+              </div>
             </div>
+
+            {/* Transaction Hash Section */}
             <div className="detail-item transaction-hash">
-              <span className="detail-label">Transaction Hash (Blockchain reference):</span>
-              <span className="detail-value">{issuedCertificate.txHash}</span>
+              <span className="detail-label">⛓️ Transaction Hash (Blockchain reference):</span>
+              <div className="hash-container">
+                <span className="detail-value hash-value">{issuedCertificate.txHash}</span>
+                {issuedCertificate.txHash && (
+                  <button
+                    className="action-button copy-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText(issuedCertificate.txHash);
+                      alert('✅ Transaction hash copied to clipboard!');
+                    }}
+                    title="Copy to clipboard"
+                  >
+                    📋 Copy Tx Hash
+                  </button>
+                )}
+              </div>
             </div>
+
             {issuedCertificate.warning && (
               <div className="warning">
-                <strong>Warning:</strong> {issuedCertificate.warning}
+                <strong>⚠️ Warning:</strong> {issuedCertificate.warning}
               </div>
             )}
+
+            {/* Verification Instructions */}
             <div className="verification-instructions">
-              <p className="important-note">⚠️ IMPORTANT: To verify this certificate, you must use the Certificate Hash above, NOT the Transaction Hash.</p>
-              <p>The Certificate Hash is a unique identifier generated from the certificate's contents.</p>
-              <a href={`/verify/${issuedCertificate.certHash}`} className="verify-link">Verify This Certificate</a>
+              <h4>🔍 How to Verify Your Certificate:</h4>
+              <ol>
+                <li>
+                  <strong>Using Hash:</strong> Go to the "Verify Certificate" page and paste the Certificate Hash above
+                </li>
+                <li>
+                  <strong>Using QR Code:</strong> Go to "Verify Certificate" → "Upload QR Image" and upload the QR code
+                </li>
+                <li>
+                  <strong>Using Camera:</strong> Go to "Verify Certificate" → "Scan with Camera" and scan the QR code with your device camera
+                </li>
+              </ol>
+              <p className="important-note">
+                ⚠️ IMPORTANT: To verify this certificate, you must use the <strong>Certificate Hash</strong> above, NOT the Transaction Hash.
+              </p>
+              <a href={`/verify/${issuedCertificate.certHash}`} className="verify-link">
+                ✅ Verify This Certificate Now
+              </a>
             </div>
           </div>
         </div>

@@ -14,7 +14,7 @@ from django.conf import settings
 
 # Use settings with fallback for local development
 BLOCKCHAIN_URL = getattr(settings, 'BLOCKCHAIN_URL', 'http://127.0.0.1:8545')
-CONTRACT_ADDRESS = getattr(settings, 'CONTRACT_ADDRESS', '0x8356f2947591B73ef1Fe0C803014FADC5c7561Ba')  # Default to our deployed contract
+CONTRACT_ADDRESS = getattr(settings, 'CONTRACT_ADDRESS', ' 0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab')  # Default to our deployed contract
 
 class BlockchainConnectionError(Exception):
     """Raised when blockchain connection fails"""
@@ -238,8 +238,34 @@ def issue_certificate(student_name, course, institution, issue_date):
             if tx_receipt.status != 1:
                 raise SmartContractError(f"Transaction failed. Receipt status: {tx_receipt.status}")
             
+            # Extract the actual certificate hash from the contract event
+            try:
+                if tx_receipt.logs:
+                    # Decode the event from the logs
+                    event_logs = contract.events.CertificateIssued().process_receipt(tx_receipt)
+                    if event_logs:
+                        actual_cert_hash = event_logs[0]['args']['certHash']
+                        actual_cert_hash = '0x' + actual_cert_hash.hex() if not isinstance(actual_cert_hash, str) else actual_cert_hash
+                        if not actual_cert_hash.startswith('0x'):
+                            actual_cert_hash = '0x' + actual_cert_hash
+                        
+                        # Verify the event hash matches our pre-calculated hash
+                        if actual_cert_hash.lower() != cert_hash.lower():
+                            print(f"Warning: Pre-calculated hash ({cert_hash}) differs from event hash ({actual_cert_hash})")
+                            # Use the actual event hash to be safe
+                            cert_hash = actual_cert_hash
+                        else:
+                            print(f"Verified: Pre-calculated hash matches event hash: {cert_hash}")
+                    else:
+                        print("Warning: No CertificateIssued event found in transaction receipt")
+                else:
+                    print("Warning: No logs found in transaction receipt")
+            except Exception as e:
+                print(f"Warning: Could not extract hash from event: {str(e)}. Using pre-calculated hash.")
+            
             # Log successful transaction
             print(f"Certificate issued successfully. Transaction hash: {tx_hash.hex()}")
+            print(f"Certificate hash: {cert_hash}")
             print(f"Block number: {tx_receipt.blockNumber}")
             print(f"Gas used: {tx_receipt.gasUsed}")
                 
@@ -280,10 +306,17 @@ def verify_certificate_on_chain(cert_hash):
             cert_hash = cert_hash[2:]  # Remove '0x' prefix if present
         
         print(f"Formatted hash for verification: {cert_hash}")
+        
+        # Ensure hash is exactly 64 hex characters (32 bytes)
+        if len(cert_hash) != 64:
+            raise SmartContractError(f"Invalid certificate hash length: expected 64 hex chars, got {len(cert_hash)}")
             
         # Convert hex string to bytes32
         try:
-            cert_hash_bytes = Web3.to_bytes(hexstr=cert_hash)
+            # Pad with zeros if needed and convert to bytes
+            cert_hash_bytes = bytes.fromhex(cert_hash)
+            if len(cert_hash_bytes) != 32:
+                raise ValueError(f"Hash must be exactly 32 bytes, got {len(cert_hash_bytes)}")
             print(f"Converted hash to bytes: {cert_hash_bytes.hex()}")
         except Exception as e:
             print(f"Error converting hash to bytes: {str(e)}")
@@ -316,7 +349,11 @@ def verify_certificate_on_chain(cert_hash):
             error_msg = str(contract_error)
             print(f"Contract call error: {error_msg}")
             
-            if "revert Certificate not found" in error_msg:
+            # Handle the case where contract returns empty data (certificate not found)
+            if "InsufficientDataBytes" in error_msg or "Tried to read 32 bytes, only got 0 bytes" in error_msg:
+                print(f"Certificate not found on blockchain (contract returned empty data)")
+                raise SmartContractError("Certificate not found on blockchain")
+            elif "revert Certificate not found" in error_msg:
                 raise SmartContractError("Certificate not found on blockchain")
             elif "revert" in error_msg:
                 raise SmartContractError(f"Contract reverted: {error_msg}")

@@ -1,0 +1,420 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║             TROUBLESHOOTING GUIDE - CERTIFICATE VERIFICATION              ║
+║                   Addresses Three Main Issues                             ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════
+ISSUE #1: CERTIFICATE SHOWS AS INVALID AFTER ISSUANCE
+═══════════════════════════════════════════════════════════════════════════════
+
+SYMPTOM:
+  - Certificate issued successfully
+  - QR code and hash displayed
+  - When verifying, shows "❌ Certificate is Invalid"
+  - But it was just issued!
+
+ROOT CAUSES:
+─────────────────────────────────────────────────────────────────────────────
+
+1️⃣ BLOCKCHAIN NOT PERSISTING DATA
+   Problem: Smart contract not actually storing the certificate
+   Why: Ganache blockchain not running, contract not deployed, or silent failure
+   
+2️⃣ HASH MISMATCH
+   Problem: Frontend hash ≠ Blockchain hash
+   Why: Timezone difference, data format difference, field ordering
+   
+3️⃣ VERIFICATION LOGIC ERROR
+   Problem: Code checking for "blockchain_result is not None"
+   Why: If blockchain call fails, always returns invalid
+   Solution: ✅ Now returns detailed error messages instead
+
+DIAGNOSIS STEPS:
+─────────────────────────────────────────────────────────────────────────────
+
+Step 1: Check if Ganache is Running
+  Command: Get-Process ganache -ErrorAction SilentlyContinue
+  If not running: ganache-cli -p 8545 -d
+  Expected: "Listening on 127.0.0.1:8545"
+
+Step 2: Check if Contract is Deployed
+  Location: certificate-verification-system/
+  Commands:
+    truffle migrate --reset
+  Expected: "Deployed to: 0x..." message
+
+Step 3: Check Django Logs During Issuance
+  Watch Django terminal (Terminal 3) for these messages:
+    ✅ "Certificate issued successfully" 
+    ✅ "Transaction hash: 0x..."
+    ✅ "Block number: X"
+  
+  If you see ❌ ERROR instead:
+    1. Copy the full error message
+    2. Check if it mentions "revert"
+    3. Run diagnostic: python manage.py shell < advanced_diagnose.py
+
+Step 4: Verify Certificate Data in Database
+  Run Python shell:
+    python manage.py shell
+    
+  Then:
+    from certificates.models import Certificate
+    c = Certificate.objects.latest('id')
+    print(f"Hash: {c.cert_hash}")
+    print(f"Student: {c.student_name}")
+    print(f"Date: {c.issue_date}")
+
+Step 5: Test Blockchain Verification
+  Run Python shell:
+    from certificates.blockchain import verify_certificate_on_chain
+    result = verify_certificate_on_chain(c.cert_hash)
+    print(result)
+  
+  If returns None:
+    - Certificate not on blockchain
+    - Check Ganache logs
+    - Verify contract address in .env
+  
+  If returns data (tuple):
+    - Certificate found
+    - Should verify successfully
+
+FIXES TO APPLY:
+─────────────────────────────────────────────────────────────────────────────
+
+✅ Fix #1: Improved Frontend (ALREADY APPLIED)
+   - Better QR code error handling
+   - Displays status messages
+   - Shows "being generated" if missing
+
+✅ Fix #2: Better Error Messages (ALREADY APPLIED)
+   - Returns detailed blockchain error
+   - Shows reason why verification failed
+   - Includes helpful hints
+
+✅ Fix #3: Added Copy/Download Buttons (ALREADY APPLIED)
+   - Easy hash copying
+   - QR code download
+   - Better UI for sharing
+
+MANUAL TEST:
+─────────────────────────────────────────────────────────────────────────────
+
+1. Issue certificate with these values:
+   - Student: Test Verification
+   - Course: Blockchain Basics
+   - Institution: Test Academy
+   - Date: Today
+   - PDF: Any PDF file
+
+2. Copy the Certificate Hash shown
+
+3. Go to Django shell:
+   python manage.py shell
+   
+   from certificates.blockchain import verify_certificate_on_chain
+   from certificates.models import Certificate
+   
+   # Get your certificate
+   c = Certificate.objects.filter(student_name='Test Verification').first()
+   
+   # Try to verify on blockchain
+   try:
+       result = verify_certificate_on_chain(c.cert_hash)
+       print("✅ Certificate found on blockchain!")
+       print(result)
+   except Exception as e:
+       print(f"❌ Error: {e}")
+
+4. If it works:
+   - Verification endpoint should return VALID
+   - If not, there's a code issue
+
+═══════════════════════════════════════════════════════════════════════════════
+ISSUE #2: QR CODE NOT LOADING/VISIBLE
+═══════════════════════════════════════════════════════════════════════════════
+
+SYMPTOM:
+  - After issuance, QR code area is blank
+  - No image displayed
+  - "QR code is being generated" message shows
+
+ROOT CAUSES:
+─────────────────────────────────────────────────────────────────────────────
+
+1️⃣ QR FILE NOT GENERATED
+   Problem: QR code PNG file not created
+   Why: pyzbar/Pillow not installed or failing
+   
+2️⃣ FILE NOT SAVED TO DISK
+   Problem: File created but not persisted
+   Why: Permission issues, wrong path, disk full
+   
+3️⃣ URL NOT BUILDING CORRECTLY
+   Problem: URL is broken or inaccessible
+   Why: Missing request context, wrong domain, CORS issue
+   
+4️⃣ CORS BLOCKING REQUEST
+   Problem: Browser blocked QR file load
+   Why: Wrong origin header
+
+DIAGNOSIS STEPS:
+─────────────────────────────────────────────────────────────────────────────
+
+Step 1: Check if Pillow and pyzbar are Installed
+  In Django shell:
+    import PIL
+    import pyzbar
+    print("✅ Dependencies OK")
+  
+  If ImportError:
+    pip install Pillow pyzbar
+
+Step 2: Check if QR File Exists
+  Navigate to:
+    Django_Backend/media/qr_codes/
+  
+  Should see PNG files named like:
+    certificate-0x1234567890ab...png
+  
+  If directory empty:
+    - Generation failing
+    - Check Django logs for errors
+    - Run diagnostic script
+
+Step 3: Check File is Accessible via Browser
+  Get a QR file name from database:
+    python manage.py shell
+    from certificates.models import Certificate
+    c = Certificate.objects.latest('id')
+    print(c.qr_code.url if c.qr_code else 'None')
+  
+  Try accessing directly:
+    http://127.0.0.1:8000/media/qr_codes/<filename>
+  
+  If 404 or 500:
+    - Django not serving media
+    - Check settings.py MEDIA_ROOT
+
+Step 4: Check Frontend Receives URL
+  Open Browser DevTools (F12)
+  Go to Network tab
+  Issue new certificate
+  Look for issuance API response
+  Check if response includes qr_code_url
+  
+  If missing:
+    - Serializer not including it
+    - Check serializers.py
+
+Step 5: Check Frontend Can Display It
+  In Console (F12):
+    fetch('http://127.0.0.1:8000/media/qr_codes/<filename>')
+      .then(r => console.log(r.status))
+  
+  Should return 200
+  If 403 or 500:
+    - Server issue
+    - Check Django
+
+FIXES TO APPLY:
+─────────────────────────────────────────────────────────────────────────────
+
+✅ Fix #1: Verify Installations
+   pip list | grep -i "pillow\|pyzbar\|qrcode"
+   
+   If missing:
+     pip install Pillow pyzbar qrcode
+
+✅ Fix #2: Test QR Generation
+   python manage.py shell
+   from certificates.qr_generator import generate_qr_code
+   file = generate_qr_code('0xtest1234')
+   print(file)
+   
+   Should return a ContentFile object
+
+✅ Fix #3: Verify Serializer Includes URL
+   Check: Django_Backend/certificates/serializers.py
+   Should have:
+     qr_code_url = serializers.SerializerMethodField()
+     def get_qr_code_url(self, obj):
+         if obj.qr_code:
+             return obj.qr_code.url
+         return None
+
+✅ Fix #4: Add Better Error Handling
+   Frontend now shows:
+     - Loading message while generating
+     - Specific error if file can't load
+     - Download button to verify file exists
+
+✅ Fix #5: Test from Frontend
+   Issue certificate
+   Right-click → Inspect
+   Check Network tab for QR request
+   Should see 200 response with image data
+
+═══════════════════════════════════════════════════════════════════════════════
+ISSUE #3: NO COPY HASH / DOWNLOAD QR BUTTONS
+═══════════════════════════════════════════════════════════════════════════════
+
+SYMPTOM:
+  - No way to copy certificate hash
+  - No way to download QR code
+  - Have to manually select and copy
+
+SOLUTION IMPLEMENTED:
+─────────────────────────────────────────────────────────────────────────────
+
+✅ Copy Hash Button
+   Location: Next to Certificate Hash
+   Function: Copies hash to clipboard
+   Usage: Click → Alert shows "✅ Copied!"
+   Code: Uses navigator.clipboard API
+
+✅ Copy Tx Hash Button
+   Location: Next to Transaction Hash
+   Function: Same as copy hash
+   Usage: Click → Alert shows "✅ Copied!"
+
+✅ Download QR Button
+   Location: Below QR code image
+   Function: Downloads QR as PNG file
+   Usage: Click → Browser saves file as certificate-qr-<hash>.png
+   Code: Creates temporary download link
+
+NEW UI IMPROVEMENTS:
+─────────────────────────────────────────────────────────────────────────────
+
+1. Better Visual Hierarchy
+   - QR section highlighted in blue
+   - Hash section highlighted in green
+   - Buttons styled with clear actions
+   - Icons for visual guidance
+
+2. Responsive Design
+   - Buttons adapt to mobile screens
+   - Hash text breaks nicely
+   - Touch-friendly button sizes
+
+3. Better Instructions
+   - Step-by-step verification guide
+   - Shows 3 verification methods
+   - Links to verification page
+
+4. Error Handling
+   - Shows "QR being generated" if missing
+   - Provides helpful error messages
+   - Includes reload suggestion
+
+VERIFICATION THAT FIXES WORK:
+─────────────────────────────────────────────────────────────────────────────
+
+1. Issue Certificate
+   Go to: http://localhost:3000/issue
+   Fill in all fields
+   Click "Issue Certificate"
+   ✅ Expected: All buttons visible
+
+2. Test Copy Hash
+   Click "📋 Copy Hash" button
+   ✅ Expected: Alert says "✅ Copied!"
+   Paste elsewhere: Ctrl+V
+   ✅ Expected: Hash appears
+
+3. Test Download QR
+   Click "📥 Download QR Code" button
+   ✅ Expected: File downloads
+   Check Downloads folder
+   ✅ Expected: File named "certificate-qr-<hash>.png"
+
+4. Verify Certificate
+   Click "✅ Verify This Certificate Now" link
+   ✅ Expected: Goes to verification page with hash pre-filled
+
+═══════════════════════════════════════════════════════════════════════════════
+WHEN TO USE WHICH DIAGNOSTIC
+═══════════════════════════════════════════════════════════════════════════════
+
+Issue: "Certificate invalid after issuance"
+  👉 Run: python manage.py shell < advanced_diagnose.py
+
+Issue: "QR code not displaying"
+  👉 Check: Django_Backend/media/qr_codes/ directory exists
+  👉 Run: Browser DevTools Network tab during issuance
+
+Issue: "Can't copy hash or download QR"
+  👉 Check: That buttons are visible in UI
+  👉 Check: Browser console (F12) for JavaScript errors
+
+Issue: "Multiple issues at once"
+  👉 Run: Full diagnostic script
+  👉 Save output
+  👉 Review section by section
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK REFERENCE COMMANDS
+═══════════════════════════════════════════════════════════════════════════════
+
+View all certificates:
+  python manage.py shell
+  from certificates.models import Certificate
+  for c in Certificate.objects.all():
+      print(f"{c.student_name}: {c.cert_hash}")
+
+Test specific certificate:
+  from certificates.blockchain import verify_certificate_on_chain
+  result = verify_certificate_on_chain('0xabc123...')
+  print(result)  # Should return tuple with data
+
+List QR files:
+  ls -la Django_Backend/media/qr_codes/
+
+Check Django settings:
+  python manage.py shell
+  from django.conf import settings
+  print(f"Media root: {settings.MEDIA_ROOT}")
+  print(f"Media URL: {settings.MEDIA_URL}")
+
+Run Ganache in background:
+  ganache-cli -p 8545 -d &
+
+Deploy contract:
+  cd certificate-verification-system
+  truffle migrate --reset
+
+═══════════════════════════════════════════════════════════════════════════════
+STILL HAVING ISSUES?
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Check ALL three services are running:
+   Terminal 1: Ganache - "Listening on 127.0.0.1:8545"
+   Terminal 2: Django - "Starting development server..."
+   Terminal 3: React - "Compiled successfully!"
+
+2. Run advanced diagnostic:
+   python manage.py shell < advanced_diagnose.py
+   Save all output
+
+3. Check error logs:
+   Django terminal: Look for RED ERROR messages
+   Browser console (F12): Look for red errors
+   Ganache terminal: Look for transaction errors
+
+4. Verify .env file has correct settings:
+   Check: BLOCKCHAIN_URL=http://127.0.0.1:8545
+   Check: CONTRACT_ADDRESS has value
+   Check: CORS_ORIGIN includes localhost:3000
+
+5. If smart contract not deployed:
+   cd certificate-verification-system
+   truffle migrate --reset
+   Note the contract address
+   Update .env CONTRACT_ADDRESS with new address
+   Restart Django
+
+═══════════════════════════════════════════════════════════════════════════════

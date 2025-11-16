@@ -1,0 +1,228 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    🚀 FRESH SYSTEM START - GUIDE                           ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+This guide will walk you through starting the entire system from scratch.
+
+┌─ STEP 1: START GANACHE (Blockchain) ───────────────────────────────────────┐
+│                                                                             │
+│ Ganache is the local blockchain where certificates are stored.             │
+│                                                                             │
+│ Option A: Using Ganache CLI (if installed)                                 │
+│ ────────────────────────────────────────                                   │
+│ Open PowerShell and run:                                                   │
+│   ganache-cli -p 8545 -d                                                   │
+│                                                                             │
+│ Expected output:                                                            │
+│   ✅ Ganache CLI v6.x.x                                                    │
+│   ✅ Listening on 127.0.0.1:8545                                           │
+│   ✅ [Accounts and Private Keys]                                           │
+│                                                                             │
+│ Option B: Using Ganache GUI (if installed)                                 │
+│ ──────────────────────────────────────────                                 │
+│ 1. Open Ganache application                                                │
+│ 2. Click "Quickstart" (or configure for port 8545)                         │
+│ 3. Ensure it shows "localhost:8545"                                        │
+│ 4. You should see accounts and blocks                                      │
+│                                                                             │
+│ Option C: Using Docker (if Docker installed)                               │
+│ ─────────────────────────────────────────────                              │
+│   docker run -d -p 8545:8545 trufflesuite/ganache-cli -h 0.0.0.0 -d       │
+│                                                                             │
+│ ✅ VERIFY: Ganache should be running on http://127.0.0.1:8545             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ STEP 2: DEPLOY SMART CONTRACT ───────────────────────────────────────────┐
+│                                                                             │
+│ The smart contract manages certificates on blockchain.                     │
+│                                                                             │
+│ Open a NEW PowerShell terminal in:                                         │
+│   certificate-verification-system/certificate-verification-system         │
+│                                                                             │
+│ Run:                                                                        │
+│   truffle migrate --reset                                                  │
+│                                                                             │
+│ Expected output:                                                            │
+│   ✅ Compiling contracts...                                                │
+│   ✅ Compiled 1 contract                                                   │
+│   ✅ Deploying contracts...                                                │
+│   ✅ Contract deployed at: 0x...                                           │
+│                                                                             │
+│ ✅ VERIFY: Note the contract address (you'll see it in Django)            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ STEP 3: START DJANGO BACKEND ────────────────────────────────────────────┐
+│                                                                             │
+│ Open a NEW PowerShell terminal in:                                         │
+│   certificate-verification-system/Django_Backend                           │
+│                                                                             │
+│ Run:                                                                        │
+│   python manage.py runserver                                               │
+│                                                                             │
+│ Expected output:                                                            │
+│   ✅ Blockchain connection initialized successfully                        │
+│   ✅ Starting development server at http://127.0.0.1:8000/                │
+│   ✅ [System check identified no issues]                                  │
+│                                                                             │
+│ ⚠️  IMPORTANT: Keep this terminal open!                                    │
+│ You'll see certificate verification logs here later.                       │
+│                                                                             │
+│ ✅ VERIFY: Django running on http://127.0.0.1:8000                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ STEP 4: START REACT FRONTEND ────────────────────────────────────────────┐
+│                                                                             │
+│ Open a NEW PowerShell terminal in:                                         │
+│   certificate-verification-system/certificate-verification-frontend      │
+│                                                                             │
+│ Run:                                                                        │
+│   npm start                                                                 │
+│                                                                             │
+│ Expected output:                                                            │
+│   ✅ Compiled successfully!                                                │
+│   ✅ On Your Network: http://localhost:3000                                │
+│   ✅ [Webpack compiled]                                                    │
+│                                                                             │
+│ Browser should open automatically showing the application.                 │
+│                                                                             │
+│ ✅ VERIFY: React running on http://localhost:3000                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ STEP 5: TEST CERTIFICATE ISSUANCE ───────────────────────────────────────┐
+│                                                                             │
+│ Now test issuing a certificate:                                            │
+│                                                                             │
+│ 1. Open browser to http://localhost:3000                                   │
+│ 2. Click "New Certificate" button                                          │
+│ 3. Fill in the form:                                                       │
+│    - Student Name: Test Student                                            │
+│    - Course: Test Course                                                   │
+│    - Institution: Test University                                          │
+│    - Date: Today's date                                                    │
+│    - PDF: Select any PDF file                                              │
+│ 4. Click "Issue Certificate"                                               │
+│                                                                             │
+│ Expected result:                                                            │
+│   ✅ "Certificate issued successfully!"                                    │
+│   ✅ QR code displayed                                                     │
+│   ✅ Certificate hash shown                                                │
+│   ✅ Check Django terminal - should show:                                  │
+│      "Certificate issued with hash: 0x..."                                 │
+│                                                                             │
+│ ✅ VERIFY: Certificate appears in UI with QR code                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ STEP 6: TEST CERTIFICATE VERIFICATION ───────────────────────────────────┐
+│                                                                             │
+│ Test verifying the certificate:                                            │
+│                                                                             │
+│ Option A: Verify by Hash                                                   │
+│ ────────────────────────────                                               │
+│ 1. Click "Verify Certificate" tab                                          │
+│ 2. Paste the certificate hash from Step 5                                  │
+│ 3. Click "Verify"                                                          │
+│ 4. Expected: ✅ Shows "Certificate is Valid" with green checkmark          │
+│                                                                             │
+│ Option B: Verify by QR Upload                                              │
+│ ──────────────────────────────                                             │
+│ 1. Click "Upload QR Image" tab                                             │
+│ 2. Upload the QR code image from Step 5                                    │
+│ 3. Expected: ✅ Shows "Certificate is Valid" with certificate details     │
+│                                                                             │
+│ Option C: Verify by Camera                                                 │
+│ ──────────────────────────────                                             │
+│ 1. Click "Scan with Camera" tab                                            │
+│ 2. Point camera at QR code                                                 │
+│ 3. Expected: ✅ Auto-detects and shows "Certificate is Valid"             │
+│                                                                             │
+│ ✅ VERIFY: All verification methods work                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ STEP 7: MONITOR DJANGO LOGS ─────────────────────────────────────────────┐
+│                                                                             │
+│ During verification, watch the Django terminal for logs:                   │
+│                                                                             │
+│ Expected logs:                                                              │
+│   ✅ "Attempting to verify certificate: 0x..."                             │
+│   ✅ "Certificate found in database: [Name]"                               │
+│   ✅ "Attempting blockchain verification for: 0x..."                       │
+│   ✅ "✅ Certificate found on blockchain"                                  │
+│   ✅ "✅ VERIFICATION RESULT:"                                             │
+│   ✅ "   database_valid: True"                                             │
+│   ✅ "   blockchain_result found: True"                                    │
+│   ✅ "   overall_valid: True"                                              │
+│                                                                             │
+│ If you see errors, note them and share with me.                            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TERMINAL LAYOUT ─────────────────────────────────────────────────────────┐
+│                                                                             │
+│ You should have 4 terminals open:                                          │
+│                                                                             │
+│ Terminal 1: Ganache                                                         │
+│   $ ganache-cli -p 8545 -d                                                 │
+│   [Running - shows accounts]                                               │
+│                                                                             │
+│ Terminal 2: Truffle (for contract deployment)                              │
+│   $ truffle migrate --reset                                                │
+│   [Run once, then close]                                                   │
+│                                                                             │
+│ Terminal 3: Django                                                         │
+│   $ python manage.py runserver                                             │
+│   [Running - shows verification logs]                                      │
+│                                                                             │
+│ Terminal 4: React                                                          │
+│   $ npm start                                                               │
+│   [Running - shows "Compiled successfully!"]                               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                          ✅ FULL SYSTEM RUNNING!                          ║
+║                                                                            ║
+║  You can now:                                                              ║
+║  • Issue certificates at http://localhost:3000/issue                       ║
+║  • Verify certificates at http://localhost:3000/verify                     ║
+║  • Upload QR codes for verification                                        ║
+║  • Scan QR codes with camera                                               ║
+║                                                                            ║
+║  Django API: http://127.0.0.1:8000                                         ║
+║  React App: http://localhost:3000                                          ║
+║  Ganache: http://127.0.0.1:8545                                            ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+TROUBLESHOOTING:
+
+❌ "Ganache not running"
+   → Start Ganache CLI or GUI on port 8545
+
+❌ "Contract deployment failed"
+   → Make sure Ganache is running first
+   → Run: truffle migrate --reset
+
+❌ "Django can't connect to blockchain"
+   → Check Ganache is running on 127.0.0.1:8545
+   → Check contract address matches
+
+❌ "Certificate verification fails"
+   → Check Django logs (Terminal 3)
+   → Ensure certificate was just issued
+   → Verify hash matches
+
+❌ "Frontend shows errors"
+   → Check browser console (F12)
+   → Check React terminal for compile errors
+   → Refresh page (Ctrl+R)
+
+For detailed help, check:
+• DEBUGGING_INVALID_CERTIFICATES.md
+• ACTION_REQUIRED_DEBUG_OUTPUT.md
+• QR_VERIFICATION_500_ERROR_FIX.md

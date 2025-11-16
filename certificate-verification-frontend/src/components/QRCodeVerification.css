@@ -1,0 +1,153 @@
+/* QRCodeVerification.css */
+
+.qr-code-verification {
+  padding: 2rem;
+}
+
+.qr-upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
+}
+
+.qr-upload-area:hover {
+  border-color: #1976d2;
+  background-color: #f0f7ff;
+}
+
+.qr-upload-area.active {
+  border-color: #1976d2;
+  background-color: #e3f2fd;
+}
+
+.qr-upload-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #1976d2;
+}
+
+.qr-camera-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.qr-video {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.qr-scanning-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  aspect-ratio: 1;
+  border: 2px solid #1976d2;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(25, 118, 210, 0.5);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(25, 118, 210, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(25, 118, 210, 0.8);
+  }
+}
+
+.qr-result {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background-color: #f0f7ff;
+  border: 1px solid #1976d2;
+}
+
+.qr-result.invalid {
+  background-color: #ffebee;
+  border-color: #d32f2f;
+}
+
+.qr-result-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.qr-result-icon {
+  font-size: 1.5rem;
+}
+
+.qr-result.valid .qr-result-icon {
+  color: #4caf50;
+}
+
+.qr-result.invalid .qr-result-icon {
+  color: #d32f2f;
+}
+
+.qr-cert-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.qr-cert-detail {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.qr-cert-detail-label {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.qr-cert-detail-value {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.qr-error {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #ffebee;
+  border: 1px solid #d32f2f;
+  border-radius: 4px;
+  color: #d32f2f;
+}
+
+@media (max-width: 600px) {
+  .qr-code-verification {
+    padding: 1rem;
+  }
+
+  .qr-upload-area {
+    padding: 1rem;
+  }
+
+  .qr-cert-details {
+    grid-template-columns: 1fr;
+  }
+}

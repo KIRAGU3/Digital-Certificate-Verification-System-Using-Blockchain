@@ -9,6 +9,7 @@ class Certificate(models.Model):
     ipfs_hash = models.CharField(max_length=64, null=True, blank=True)
     certificate_pdf = models.FileField(upload_to='certificates/', null=True, blank=True)
     pdf_hash = models.CharField(max_length=66, null=True, blank=True)
+    qr_code = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_revoked = models.BooleanField(default=False)
     blockchain_verified = models.BooleanField(default=False)

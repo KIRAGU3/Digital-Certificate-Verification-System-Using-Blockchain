@@ -1,0 +1,172 @@
+#!/usr/bin/env python
+"""
+Debug script to analyze and fix certificate verification issues
+"""
+
+print("""
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   CERTIFICATE VERIFICATION ISSUES                         ║
+║                        ROOT CAUSE ANALYSIS                                ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+ISSUE 1: Certificate Shows as INVALID After Issuance
+═══════════════════════════════════════════════════════════════════════════════
+
+ROOT CAUSES IDENTIFIED:
+  1. Hash mismatch between frontend calculation and blockchain storage
+     - Frontend might be hashing different data or in different order
+     - Timezone difference could cause different timestamps
+     
+  2. Certificate not being recorded on smart contract
+     - Ganache blockchain might not be persisting data
+     - Transaction might be failing silently
+     
+  3. Verification logic checking for "blockchain_result is not None"
+     - If blockchain call fails or returns empty, certificate marked invalid
+     - Need better error handling and logging
+
+SOLUTIONS IMPLEMENTED:
+─────────────────────────────────────────────────────────────────────────────
+
+✅ Solution 1: Improved Frontend Display
+   - Added better QR code error handling
+   - Shows "QR is being generated" message if not loaded
+   - Added onError handler to log QR load failures
+
+✅ Solution 2: New UI Features (Added)
+   - Copy Hash button → Easy clipboard copy
+   - Download QR button → Save QR locally
+   - Improved layout with visual hierarchy
+   - Better error messages
+
+✅ Solution 3: Hash Verification Debugging (Next)
+   - We need to add detailed logging in blockchain.py
+   - Create endpoint to check hash at each stage
+   - Verify frontend and backend hash calculations match
+
+
+ISSUE 2: QR Code Not Loading/Visible
+═══════════════════════════════════════════════════════════════════════════════
+
+ROOT CAUSES:
+  1. QR code file not being saved/accessible
+     - File path issue
+     - Permission issue
+     - Django media configuration missing
+     
+  2. QR code URL not building correctly
+     - build_absolute_uri failing
+     - URL not including domain
+
+SOLUTIONS IMPLEMENTED:
+─────────────────────────────────────────────────────────────────────────────
+
+✅ Enhanced serializer with better error handling
+✅ Added QR code visibility indicators
+✅ Added download button to verify file exists
+✅ Better debugging in frontend with onError
+
+
+ISSUE 3: No Copy/Download Buttons
+═══════════════════════════════════════════════════════════════════════════════
+
+SOLUTIONS IMPLEMENTED:
+─────────────────────────────────────────────────────────────────────────────
+
+✅ Added Copy Hash button → Uses navigator.clipboard API
+✅ Added Copy Tx Hash button → Same functionality
+✅ Added Download QR button → Downloads QR code as PNG
+✅ Styled buttons with proper visual feedback
+✅ Added tooltip and keyboard support
+
+
+NEXT STEPS:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Check Django logs during certificate issuance:
+   - Look for "Certificate issued successfully"
+   - Look for blockchain transaction confirmation
+   - Look for QR code generation success
+
+2. If blockchain verification fails:
+   - Check if smart contract is deployed
+   - Verify Ganache is running (ganache-cli -p 8545 -d)
+   - Check if certificate data matches blockchain
+
+3. Run diagnostic:
+   - python manage.py shell < diagnose_system.py
+   - Review output for each certificate
+
+4. Test hash calculation:
+   - Frontend: Use React DevTools to check hash
+   - Backend: Check Django logs for keccak256 output
+   - Smart Contract: Use Ganache console to verify data
+
+DEBUGGING TIPS:
+═══════════════════════════════════════════════════════════════════════════════
+
+Frontend Debugging:
+  1. Open browser console (F12)
+  2. Look for QR code URL in response
+  3. Try accessing URL directly in browser
+  4. Check if CORS is blocking requests
+
+Backend Debugging:
+  1. Watch Django terminal during issuance
+  2. Check for "Attempting blockchain verification" log
+  3. Look for SmartContractError messages
+  4. Verify certificate in DB: python manage.py shell
+     > from certificates.models import Certificate
+     > c = Certificate.objects.latest('id')
+     > print(c.cert_hash, c.qr_code.name if c.qr_code else 'No QR')
+
+Blockchain Debugging:
+  1. Check Ganache terminal for transaction details
+  2. Verify contract functions are callable
+  3. Check gas usage and any revert errors
+  4. Ensure contract address matches in settings
+
+MANUAL TESTING:
+═══════════════════════════════════════════════════════════════════════════════
+
+Test 1: Issue Certificate and Check Database
+  1. Go to http://localhost:3000/issue
+  2. Fill form (name, course, institution, date, PDF)
+  3. Submit
+  4. Note the Certificate Hash
+  5. In Django shell:
+     from certificates.models import Certificate
+     c = Certificate.objects.get(cert_hash='<your hash>')
+     print(f"QR File: {c.qr_code.name if c.qr_code else 'None'}")
+     print(f"QR URL: {c.qr_code.url if c.qr_code else 'None'}")
+
+Test 2: Verify QR Code File Exists
+  1. Check: Django_Backend/media/qr_codes/
+  2. Should contain PNG file with cert hash name
+  3. Try opening in browser: http://127.0.0.1:8000/media/qr_codes/<filename>
+
+Test 3: Test Hash Matching
+  1. Issue certificate with specific data
+  2. Check Django logs for hash
+  3. Go to Verify page
+  4. Paste hash
+  5. Watch Django logs for verification attempt
+  6. Check if blockchain returns data
+
+
+EXPECTED BEHAVIOR AFTER FIXES:
+═══════════════════════════════════════════════════════════════════════════════
+
+Issue Certificate:
+  ✅ QR code displays immediately (or shows "being generated" message)
+  ✅ Certificate hash visible with Copy button
+  ✅ Download QR button present and working
+  ✅ Verify link provided
+
+Verify Certificate:
+  ✅ Paste hash or use QR code
+  ✅ Shows "Certificate is VALID ✅" (not INVALID)
+  ✅ Displays all certificate details
+  ✅ Shows blockchain confirmation details
+
+""")

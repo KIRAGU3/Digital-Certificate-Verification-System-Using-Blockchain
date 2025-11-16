@@ -27,7 +27,7 @@ load_dotenv()
 
 # Blockchain settings
 BLOCKCHAIN_URL = os.getenv('BLOCKCHAIN_URL', 'http://127.0.0.1:8545')
-CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS', '0x9dF6eBBcc0881A5FF1B499b4024632c80Ec29925')
+CONTRACT_ADDRESS = os.getenv('CONTRACT_ADDRESS')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
